@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:13-alpine # Using a specific, lightweight Alpine-based image for stability and smaller size
+    container_name: taskflow_db # A clear, identifiable name for your container
+    environment:
+      POSTGRES_DB: taskflow_main_db # The primary database for your application
+      POSTGRES_USER: taskflow_user # A dedicated user for your application
+      POSTGRES_PASSWORD: taskflow_password # Strong password (consider using environment variables for production)
+      # You can also set PGDATA if you want to change the data directory inside the container
+      # PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data # Named volume for persistent data storage
+      # If you need multiple databases, uncomment the line below and ensure the directory and SQL file exist:
+      # - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432" # Exposes PostgreSQL on port 5432 of your host machine. Remove if only internal communication is needed.
+    restart: unless-stopped # Ensures the database service restarts automatically unless explicitly stopped
+    healthcheck: # Defines a health check to ensure the database is truly ready before other services connect
+      test: ["CMD-SHELL", "pg_isready -U taskflow_user -d taskflow_main_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s # Give the container some time to start up before checking
+    # Resource limits to prevent excessive consumption on your machine
+    cpus: 0.5 # Limits the container to use a maximum of 0.5 of a CPU core
+    mem_limit: 1g # Limits the container's memory usage to 1 Gigabyte (adjust as needed)
+    # networks:
+    #   - app_network # Uncomment and define if you use custom Docker networks for better isolation
+
+volumes:
+  db_data: # Definition of the named volume for data persistence
+# networks:
+#   app_network: # Uncomment and define if you use custom Docker networks
+#     driver: bridge
