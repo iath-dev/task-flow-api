@@ -20,7 +20,7 @@ logger.add(
     rotation="10 MB",
     retention="7 days",
     compression="zip",
-    format="log_format",
+    format=log_format,
     level="INFO",
     enqueue=True,
     backtrace=True,
