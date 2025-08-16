@@ -13,12 +13,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api import router
 from app.core.config import settings
 from app.core.logging import logger
+from app.db.base import Base
+from app.db.session import engine
 from app.schemas.response import ErrorDetail, ResponseError  # Import the schemas
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("App init")
+    Base.metadata.create_all(bind=engine)
     yield
     logger.info("App stopped")
 
@@ -64,10 +67,19 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 # Handler for Pydantic validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.error(exc.detail)
     errors_list = []
+
     for error in exc.errors():
-        field = ".".join(map(str, error["loc"])) if error["loc"] else None
+        # error["loc"] es una tupla como ("body", "password") o ("query", "page")
+        loc = error["loc"]
+
+        # Si empieza con "body", quitamos ese primer elemento
+        if loc and loc[0] == "body":
+            field = ".".join(map(str, loc[1:])) if len(loc) > 1 else None
+        else:
+            field = ".".join(map(str, loc))
+
+        logger.error(f"VALIDATION ERROR - {field} - {error['msg']}")
         errors_list.append(
             ErrorDetail(code="VALIDATION_ERROR", message=error["msg"], field=field)
         )
@@ -81,12 +93,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Generic handler for any other unhandled exceptions
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    logger.error(exc.detail)
     error_detail = ErrorDetail(
         code="INTERNAL_SERVER_ERROR",
         message="An unexpected server error occurred.",
         field=None,
     )
+    logger.error(error_detail)
     response_error = ResponseError(success=False, errors=[error_detail])
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=response_error.dict()
