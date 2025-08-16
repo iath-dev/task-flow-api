@@ -1,12 +1,11 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from uuid import UUID
 
 
 class IdSchema(BaseModel):
     """Base schema for model with an ID"""
 
-    id: UUID = Field(..., description="Unique identifier for the resource.")
+    id: int = Field(..., description="Unique identifier for the resource.")
 
 
 class TimestampBase(BaseModel):

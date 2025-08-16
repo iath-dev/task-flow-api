@@ -1,7 +1,4 @@
-import uuid
-
-from sqlalchemy import Column, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.sql import func
 
 
@@ -10,9 +7,7 @@ class IdMixin:
     Mixin for models that require an auto-increment integer ID.
     """
 
-    id = Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
-    )
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
 
 class TimestampMixin:

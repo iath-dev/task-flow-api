@@ -5,11 +5,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
-from app.db.models.logs import LoginLog
 from app.db.mixins import IdMixin, TimestampMixin
 
 
-class StatusEnum(str, enum.Enum):
+class UserStatusEnum(str, enum.Enum):
     active = "ACTIVE"
     inactive = "INACTIVE"
     pending = "PENDING"
@@ -23,8 +22,8 @@ class User(IdMixin, TimestampMixin, Base):
     full_name = Column(String(50), nullable=True)
     email = Column(String(100), unique=True, nullable=False)
     password = Column(String(100), nullable=False)
-    status = Column(Enum(StatusEnum), default=StatusEnum.active)
+    status = Column(Enum(UserStatusEnum), default=UserStatusEnum.active)
 
     last_access = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    login_logs = relationship(LoginLog, back_populates="user", lazy="raise")
+    login_logs = relationship("LoginLog", back_populates="user", lazy="raise")

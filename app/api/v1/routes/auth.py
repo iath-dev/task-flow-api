@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 
 from sqlalchemy.orm import Session
 
@@ -22,12 +22,16 @@ router = APIRouter(prefix="/auth")
     summary="Authenticate user",
     response_model=LoginResponse,
 )
-def authenticate(login_data: LoginRequest, db: Session = Depends(get_db)):
-    return auth_service.login_user(login_data=login_data, db=db)
+def authenticate(
+    login_data: LoginRequest, db: Session = Depends(get_db), request: Request = None
+):
+    token = auth_service.login_user(login_data=login_data, db=db, request=request)
+    db.commit()
+    return token
 
 
 @router.post(
-    "/signin",
+    "/register",
     tags=["Auth"],
     status_code=status.HTTP_202_ACCEPTED,
     description="Register an user in the database",
