@@ -13,15 +13,12 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api import router
 from app.core.config import settings
 from app.core.logging import logger
-from app.db.base import Base
-from app.db.session import engine
 from app.schemas.response import ErrorDetail, ResponseError  # Import the schemas
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("App init")
-    Base.metadata.create_all(bind=engine)
     yield
     logger.info("App stopped")
 
