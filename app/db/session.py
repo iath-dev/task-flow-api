@@ -1,28 +1,15 @@
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import create_engine
+from functools import lru_cache
 
 from app.core.config import settings
 
-DATABASE_URL = settings.DATABASE_URL
-
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    connect_args={"options": "-c timezone=utc"},
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def check_database() -> bool:
-    """
-    Check database connection
-    """
-    try:
-        db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        db.close()
-        return True
-    except SQLAlchemyError:
-        return False
+@lru_cache()
+def get_engine():
+    DATABASE_URL = settings.DATABASE_URL
+    if DATABASE_URL.startswith("sqlite"):
+        return create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    return create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        connect_args={"options": "-c timezone=utc"},
+    )

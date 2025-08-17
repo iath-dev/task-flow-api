@@ -1,6 +1,5 @@
 from fastapi import APIRouter, status
 
-from app.db.session import check_database
 from app.schemas.response import ResponseBase
 
 router = APIRouter()
@@ -18,5 +17,4 @@ def health_check():
     """
     Check service status
     """
-    db_ok = check_database()
-    return ResponseBase(success=db_ok, message="Server up" if db_ok else "Server down")
+    return ResponseBase(success=True, message="Server up")
